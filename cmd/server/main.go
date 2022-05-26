@@ -3,12 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-	"github.com/jmoiron/sqlx"
 	"gophkeeper/cmd/server/configuration"
 	"gophkeeper/internal/app/server/authorization"
 	"gophkeeper/internal/app/server/database"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/jmoiron/sqlx"
 
 	grpcserver "gophkeeper/internal/app/server/grpc"
 	"gophkeeper/internal/app/server/service"
@@ -19,8 +24,7 @@ import (
 )
 
 func main() {
-	// _, cancel := context.WithCancel(context.Background())
-	// go handleSignals(cancel, )
+	ctx, cancel := context.WithCancel(context.Background())
 	cfg := configuration.New()
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(
@@ -45,18 +49,32 @@ func main() {
 		return
 	}
 	d := database.NewDB(db)
-	us := service.NewUserService(d, cfg.ACCESS_TOKEN_LIFETIME, 5, cfg.ACCESS_TOKEN_SECRET, cfg.REFRESH_TOKEN_SECRET)
+	us := service.NewUserService(d, cfg.ACCESS_TOKEN_LIFETIME, cfg.REFRESH_TOKEN_LIFETIME, cfg.ACCESS_TOKEN_SECRET, cfg.REFRESH_TOKEN_SECRET)
 	ss := service.NewSyncService(d)
 	proto.RegisterGophKeeperServer(s, grpcserver.New(us, ss))
-	fmt.Println("gRPC server started on :3200")
 
-	/*	// get request from gRPC
-		go func() {*/
-	if err := s.Serve(listen); err != nil {
-		fmt.Println(err.Error())
-		return
+	go func() {
+		fmt.Println("gRPC server started on :3200")
+		if err := s.Serve(listen); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+	}()
+
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint,
+		os.Interrupt,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+	select {
+	case <-sigint:
+		s.Stop()
+		cancel()
+	case <-ctx.Done():
 	}
-	//}()
+	_, cancelt := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelt()
 
 }
 

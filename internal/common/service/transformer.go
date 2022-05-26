@@ -1,9 +1,10 @@
 package service
 
 import (
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gophkeeper/internal/common/models"
 	proto "gophkeeper/pkg/grpc/proto"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func ProtoNotesToModels(pN []*proto.Note) []models.Note {

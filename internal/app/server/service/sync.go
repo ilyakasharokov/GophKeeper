@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"gophkeeper/internal/app/server/database"
 	"gophkeeper/internal/app/server/interfaces"
 	"gophkeeper/internal/common/models"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 type SyncService struct {

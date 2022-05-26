@@ -2,9 +2,10 @@ package authorization
 
 import (
 	"context"
-	"github.com/golang-jwt/jwt"
 	"reflect"
 	"testing"
+
+	"github.com/golang-jwt/jwt"
 )
 
 func TestCreateToken(t *testing.T) {

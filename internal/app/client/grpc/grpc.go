@@ -5,13 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gophkeeper/internal/common/models"
 	"gophkeeper/internal/common/service"
 	proto "gophkeeper/pkg/grpc/proto"
 	"time"
+
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"

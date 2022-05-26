@@ -3,12 +3,13 @@ package database
 
 import (
 	"context"
-	"github.com/jackc/pgerrcode"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	myerrors "gophkeeper/internal/common/errors"
 	"gophkeeper/internal/common/models"
 	"time"
+
+	"github.com/jackc/pgerrcode"
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 // NewDB функция по созданию нового объекта для работы с базой данных

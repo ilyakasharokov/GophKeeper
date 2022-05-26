@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	DBDSN                 string `env:"DBDSN"`
-	ACCESS_TOKEN_SECRET   string `env:"ACCESS_TOKEN_SECRET"`
-	REFRESH_TOKEN_SECRET  string `env:"REFRESH_TOKEN_SECRET"`
-	ACCESS_TOKEN_LIFETIME int    `env:"ACCESS_TOKEN_LIFETIME"`
+	DBDSN                  string `env:"DBDSN"`
+	ACCESS_TOKEN_SECRET    string `env:"ACCESS_TOKEN_SECRET"`
+	REFRESH_TOKEN_SECRET   string `env:"REFRESH_TOKEN_SECRET"`
+	ACCESS_TOKEN_LIFETIME  int    `env:"ACCESS_TOKEN_LIFETIME"`
+	REFRESH_TOKEN_LIFETIME int    `env:"ACCESS_TOKEN_LIFETIME"`
 }
 
 func New() Config {

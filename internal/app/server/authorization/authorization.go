@@ -5,10 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt"
-	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt"
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 )
 
 // TokenDetails - сущность для хранения информации о токенах
