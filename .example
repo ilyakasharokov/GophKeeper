@@ -1,0 +1,8 @@
+STORAGE_PATH=data
+GRPC_ADDR=localhost:3200
+GRPC_TIMEOUT=10
+
+DBDSN=postgres://postgres:1q2w3e@localhost:5432/postgres?sslmode=disable
+ACCESS_TOKEN_LIFETIME=1
+ACCESS_TOKEN_SECRET=tknscrt
+REFRESH_TOKEN_SECRET=refreshtokensecret

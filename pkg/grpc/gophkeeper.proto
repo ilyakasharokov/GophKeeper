@@ -1,0 +1,70 @@
+
+syntax = "proto3";
+
+option go_package = "github.com/ilyakasharokov/GophKeeper/gophkeeper";
+
+package gophkeeper;
+
+import "google/protobuf/timestamp.proto";
+
+service GophKeeper {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc CheckConn(CCRequest) returns (CCResponse);
+  rpc SyncData(SyncDataRequest) returns (SyncDataResponse);
+  rpc RefreshToken (RefreshTokenRequest) returns (LoginResponse) {}
+}
+
+message RegisterRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+     string status = 1;
+     string access_token = 2;
+     string refresh_token = 3;
+}
+
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+   string status = 1;
+   string access_token = 2;
+   string refresh_token = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message CCRequest {
+}
+
+message CCResponse {
+}
+
+// data to save
+message Note {
+  string id = 1;
+  string title = 2;
+  bytes body = 3;
+  bool deleted = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp deleted_at = 7;
+}
+
+message SyncDataRequest {
+    google.protobuf.Timestamp lastSync = 1;
+    repeated Note notes = 2;
+}
+
+message SyncDataResponse {
+    string status = 1;
+    google.protobuf.Timestamp lastSync = 2;
+    repeated Note notes = 3;
+}
