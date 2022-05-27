@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"github.com/stretchr/testify/mock"
 	"gophkeeper/internal/app/client/user"
+	"gophkeeper/mocks"
 	"reflect"
 	"testing"
 )
@@ -47,12 +49,27 @@ func TestCLI_addNote(t *testing.T) {
 		storage StorageModel
 		user    *user.User
 	}
+	gmock := new(mocks.GRPCClientModel)
+	storage := new(mocks.StorageModel)
+	storage.On("AddItem", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	storage.On("Flush", mock.Anything).Return(nil)
+	usr := &user.User{
+		ID:           "sadfdasf",
+		Login:        "ilya",
+		PasswordHash: []byte("qeqweqwewqeqqw"),
+		Token:        "asdsadas dasd sadasdas dasda",
+	}
 	tests := []struct {
 		name    string
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: struct {
+			state   int
+			client  GRPCClientModel
+			storage StorageModel
+			user    *user.User
+		}{state: 0, client: gmock, storage: storage, user: usr}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

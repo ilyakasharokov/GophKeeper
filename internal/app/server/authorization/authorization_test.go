@@ -2,8 +2,11 @@ package authorization
 
 import (
 	"context"
+	"fmt"
+	"google.golang.org/grpc/metadata"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -22,17 +25,20 @@ func TestCreateToken(t *testing.T) {
 		want    *TokenDetails
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: struct {
+			userID                     string
+			accessTokenLiveTimeMinutes int
+			refreshTokenLiveTimeDays   int
+			accessTokenSecret          string
+			refreshTokenSecret         string
+		}{userID: "", accessTokenLiveTimeMinutes: 0, refreshTokenLiveTimeDays: 0, accessTokenSecret: "", refreshTokenSecret: ""}, want: &TokenDetails{}, wantErr: false}, // TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CreateToken(tt.args.userID, tt.args.accessTokenLiveTimeMinutes, tt.args.refreshTokenLiveTimeDays, tt.args.accessTokenSecret, tt.args.refreshTokenSecret)
+			_, err := CreateToken(tt.args.userID, tt.args.accessTokenLiveTimeMinutes, tt.args.refreshTokenLiveTimeDays, tt.args.accessTokenSecret, tt.args.refreshTokenSecret)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateToken() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -42,12 +48,15 @@ func TestExtractToken(t *testing.T) {
 	type args struct {
 		ctx context.Context
 	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctxWithToken := metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("Bearer %v", "token"))
 	tests := []struct {
 		name string
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: struct{ ctx context.Context }{ctx: context.Background()}, want: ""},
+		{name: "ok", args: struct{ ctx context.Context }{ctx: ctxWithToken}, want: ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -99,7 +108,10 @@ func TestTokenValid(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: struct {
+			ctx          context.Context
+			accessSecret string
+		}{ctx: context.Background(), accessSecret: "tadfasdfasdf"}, want: "", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,7 +138,10 @@ func TestVerifyToken(t *testing.T) {
 		want    *jwt.Token
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: struct {
+			ctx          context.Context
+			accessSecret string
+		}{ctx: context.Background(), accessSecret: "qeqweqw"}, want: nil, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
