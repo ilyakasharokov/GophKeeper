@@ -16,11 +16,11 @@ func TestNew(t *testing.T) {
 		args args
 		want *Storage
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: struct{ fileStoragePath string }{fileStoragePath: ""}, want: &Storage{fileStoragePath: "", Check: true}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.fileStoragePath); !reflect.DeepEqual(got, tt.want) {
+			if got := New(tt.args.fileStoragePath); !got.Check {
 				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
@@ -45,7 +45,26 @@ func TestStorage_AddItem(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "small key size", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: make([]models.Note, 0), LastSyncDate: time.Now(), fileStoragePath: "", Check: true}, args: struct {
+			title string
+			body  string
+			key   []byte
+		}{title: "test", body: "body", key: []byte("key")}, wantErr: true},
+		{name: "ok", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: make([]models.Note, 0), LastSyncDate: time.Now(), fileStoragePath: "", Check: true}, args: struct {
+			title string
+			body  string
+			key   []byte
+		}{title: "test", body: "body", key: []byte("keyqwekeyqwekeyqwekeyqwekeyqweqw")}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -74,7 +93,12 @@ func TestStorage_CheckFile(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: nil, LastSyncDate: time.Now(), fileStoragePath: "", Check: true}, want: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -107,7 +131,18 @@ func TestStorage_Flush(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: nil, LastSyncDate: time.Now(), fileStoragePath: "", Check: true}, args: struct{ hash []byte }{hash: []byte("qweqwew")}, wantErr: true},
+		{name: "ok", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: nil, LastSyncDate: time.Now(), fileStoragePath: "", Check: true}, args: struct{ hash []byte }{hash: []byte("qweqasdsadsadsadsswew")}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -134,6 +169,10 @@ func TestStorage_GetByIndex(t *testing.T) {
 	type args struct {
 		index int
 	}
+	notes := []models.Note{{
+		ID: "123",
+	}}
+	flds := fields{Data: notes, LastSyncDate: time.Now()}
 	tests := []struct {
 		name    string
 		fields  fields
@@ -141,7 +180,8 @@ func TestStorage_GetByIndex(t *testing.T) {
 		want    models.Note
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: flds, args: struct{ index int }{index: 0}, want: notes[0], wantErr: false},
+		{name: "not ok", fields: flds, args: struct{ index int }{index: 1}, want: models.Note{}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -170,12 +210,17 @@ func TestStorage_GetDataLen(t *testing.T) {
 		fileStoragePath string
 		Check           bool
 	}
+	flds := fields{
+		Data: make([]models.Note, 5),
+	}
+	flds2 := fields{}
 	tests := []struct {
 		name   string
 		fields fields
 		want   int
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: flds, want: 5},
+		{name: "not ok", fields: flds2, want: 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -199,12 +244,16 @@ func TestStorage_GetLastSyncDate(t *testing.T) {
 		fileStoragePath string
 		Check           bool
 	}
+	lsd := time.Now()
+	flds := fields{
+		LastSyncDate: lsd,
+	}
 	tests := []struct {
 		name   string
 		fields fields
 		want   time.Time
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: flds, want: lsd},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -228,12 +277,20 @@ func TestStorage_GetNonSyncedData(t *testing.T) {
 		fileStoragePath string
 		Check           bool
 	}
+	flds := fields{
+		Data: []models.Note{
+			{CreatedAt: time.Now().Add(1 * time.Minute)},
+			{CreatedAt: time.Now().Add(5 * time.Minute)},
+			{CreatedAt: time.Now().Add(-1 * time.Minute)},
+		},
+		LastSyncDate: time.Now(),
+	}
 	tests := []struct {
 		name   string
 		fields fields
 		want   []models.Note
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: flds, want: []models.Note{flds.Data[0], flds.Data[1]}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

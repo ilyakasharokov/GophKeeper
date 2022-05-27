@@ -139,6 +139,7 @@ func (storage *Storage) Flush(hash []byte) error {
 	file, err := os.OpenFile(storage.fileStoragePath, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
 		log.Err(err).Msg("open file error")
+		return err
 	}
 	writer := bufio.NewWriter(file)
 	writer.Write(encrypted)
