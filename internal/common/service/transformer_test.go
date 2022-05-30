@@ -16,7 +16,7 @@ func TestNotesToProto(t *testing.T) {
 		args args
 		want []*proto.Note
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: args{notes: nil}, want: []*proto.Note{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -36,7 +36,7 @@ func TestProtoNotesToModels(t *testing.T) {
 		args args
 		want []models.Note
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: args{pN: nil}, want: []models.Note{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -101,14 +101,10 @@ func (cli *CLI) auth() (user.User, error) {
 // readAuth read login and password from command line
 func readAuth() (login string, pwd string) {
 	login, pwd = "", ""
-	for login == "" {
-		fmt.Print("Enter your name:")
-		login = readString()
-	}
-	for pwd == "" {
-		fmt.Print("Enter your password:")
-		pwd = readString()
-	}
+	fmt.Print("Enter your name:")
+	login = readString()
+	fmt.Print("Enter your password:")
+	pwd = readString()
 	return login, pwd
 }
 
@@ -162,21 +158,21 @@ func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
 	command := readString()
 	switch command {
 	case "r":
-		user, err := cli.registration()
+		usr, err := cli.registration()
 		if err != nil {
 			fmt.Println("Registration error, try again later. (" + err.Error() + ") \n")
 		} else {
 			cli.state = LOGGED_IN
-			cli.user = &user
+			cli.user = &usr
 		}
 		break
 	case "l":
-		user, err := cli.auth()
+		usr, err := cli.auth()
 		if err != nil {
 			fmt.Println("wrong password")
 		} else {
 			cli.state = LOGGED_IN
-			cli.user = &user
+			cli.user = &usr
 		}
 		break
 	case "q":

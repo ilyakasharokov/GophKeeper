@@ -4,9 +4,13 @@ import (
 	"context"
 	"github.com/stretchr/testify/mock"
 	"gophkeeper/internal/app/client/user"
+	"gophkeeper/internal/common/models"
 	"gophkeeper/mocks"
+	"io"
+	"io/ioutil"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestCLI_Start(t *testing.T) {
@@ -93,13 +97,30 @@ func TestCLI_auth(t *testing.T) {
 		storage StorageModel
 		user    *user.User
 	}
+	gmock := new(mocks.GRPCClientModel)
+	storage := new(mocks.StorageModel)
+	gmock.On("Login", "", "").Return("", nil)
+	gmock.On("SyncData", mock.Anything, mock.Anything).Return([]models.Note{}, time.Now(), nil)
+	storage.On("CheckFile").Return(false)
+	storage.On("UpdateData", []models.Note{}, mock.Anything).Return(nil)
+	storage.On("Flush", mock.Anything).Return(nil)
+	usr := user.User{
+		ID:    "",
+		Login: "",
+		Token: "",
+	}
 	tests := []struct {
-		name    string
-		fields  fields
-		want    user.User
+		name   string
+		fields fields
+		// want    user.User
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: fields{
+			state:   0,
+			client:  gmock,
+			storage: storage,
+			user:    &usr,
+		}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -109,13 +130,10 @@ func TestCLI_auth(t *testing.T) {
 				storage: tt.fields.storage,
 				user:    tt.fields.user,
 			}
-			got, err := cli.auth()
+			_, err := cli.auth()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("auth() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("auth() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -261,7 +279,16 @@ func Test_readAuth(t *testing.T) {
 		wantLogin string
 		wantPwd   string
 	}{
-		// TODO: Add test cases.
+		{name: "ok", wantLogin: "", wantPwd: ""},
+	}
+	in, err := ioutil.TempFile("", "")
+	_, err = io.WriteString(in, "lgn")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.WriteString(in, "pwd")
+	if err != nil {
+		t.Fatal(err)
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

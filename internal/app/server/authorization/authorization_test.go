@@ -31,7 +31,7 @@ func TestCreateToken(t *testing.T) {
 			refreshTokenLiveTimeDays   int
 			accessTokenSecret          string
 			refreshTokenSecret         string
-		}{userID: "", accessTokenLiveTimeMinutes: 0, refreshTokenLiveTimeDays: 0, accessTokenSecret: "", refreshTokenSecret: ""}, want: &TokenDetails{}, wantErr: false}, // TODO: Add test cases.
+		}{userID: "", accessTokenLiveTimeMinutes: 0, refreshTokenLiveTimeDays: 0, accessTokenSecret: "", refreshTokenSecret: ""}, want: &TokenDetails{}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -81,7 +81,13 @@ func TestRefreshToken(t *testing.T) {
 		want    *TokenDetails
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: args{
+			refresh:                    "",
+			accessTokenLiveTimeMinutes: 0,
+			refreshTokenLiveTimeDays:   0,
+			accessTokenSecret:          "",
+			refreshTokenSecret:         "",
+		}, want: nil, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
