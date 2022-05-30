@@ -21,39 +21,6 @@ type Storage struct {
 	Check           bool
 }
 
-type producer struct {
-	file   *os.File
-	writer *bufio.Writer
-}
-
-type consumer struct {
-	file    *os.File
-	scanner *bufio.Scanner
-}
-
-func newProducer(fileName string) (*producer, error) {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0777)
-	if err != nil {
-		return nil, err
-	}
-
-	return &producer{
-		file:   file,
-		writer: bufio.NewWriter(file),
-	}, nil
-}
-
-func newConsumer(fileName string) (*consumer, error) {
-	f, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
-	if err != nil {
-		return nil, err
-	}
-
-	return &consumer{
-		file: f,
-	}, nil
-}
-
 func New(fileStoragePath string) *Storage {
 	data := []models.Note{}
 	storage := Storage{

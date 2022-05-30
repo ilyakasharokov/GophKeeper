@@ -277,13 +277,18 @@ func TestStorage_GetNonSyncedData(t *testing.T) {
 		fileStoragePath string
 		Check           bool
 	}
+	data := []models.Note{
+		{CreatedAt: time.Now().Add(1 * time.Minute)},
+		{CreatedAt: time.Now().Add(5 * time.Minute)},
+		{CreatedAt: time.Now().Add(-1 * time.Minute)},
+	}
 	flds := fields{
-		Data: []models.Note{
-			{CreatedAt: time.Now().Add(1 * time.Minute)},
-			{CreatedAt: time.Now().Add(5 * time.Minute)},
-			{CreatedAt: time.Now().Add(-1 * time.Minute)},
-		},
+		Data:         data,
 		LastSyncDate: time.Now(),
+	}
+	flds2 := fields{
+		Data:         data,
+		LastSyncDate: time.Now().Add(5 * time.Minute),
 	}
 	tests := []struct {
 		name   string
@@ -291,6 +296,7 @@ func TestStorage_GetNonSyncedData(t *testing.T) {
 		want   []models.Note
 	}{
 		{name: "ok", fields: flds, want: []models.Note{flds.Data[0], flds.Data[1]}},
+		{name: "all", fields: flds2, want: []models.Note{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -317,13 +323,40 @@ func TestStorage_GetNotes(t *testing.T) {
 	type args struct {
 		all bool
 	}
+	data := []models.Note{
+		{
+			ID:      "1",
+			Deleted: true,
+		},
+		{
+			ID:      "2",
+			Deleted: false,
+		},
+		{
+			ID:      "3",
+			Deleted: false,
+		},
+	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
 		want   []models.Note
 	}{
-		// TODO: Add test cases.
+		{
+			name: "ok", fields: fields{
+				Data: data, LastSyncDate: time.Now(),
+			},
+			args: args{all: true},
+			want: data,
+		},
+		{
+			name: "ok", fields: fields{
+				Data: data, LastSyncDate: time.Now(),
+			},
+			args: args{all: false},
+			want: []models.Note{data[1], data[2]},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -356,7 +389,15 @@ func TestStorage_Load(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no such file", fields: fields{
+				Data: []models.Note{}, LastSyncDate: time.Now(), Check: true,
+			},
+			args: args{
+				[]byte("1234 2312 1232 1111 5555 5555 12"),
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -389,7 +430,22 @@ func TestStorage_SetDeleted(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "error index ", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: []models.Note{
+			{ID: "123"},
+		}}, args: args{index: 1}, wantErr: true},
+		{name: "ok", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: []models.Note{
+			{ID: "123"},
+		}}, args: args{index: 0}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -423,7 +479,12 @@ func TestStorage_UpdateData(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", fields: struct {
+			Data            []models.Note
+			LastSyncDate    time.Time
+			fileStoragePath string
+			Check           bool
+		}{Data: []models.Note{}, LastSyncDate: time.Now()}, args: args{newdata: []models.Note{}}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -435,58 +496,6 @@ func TestStorage_UpdateData(t *testing.T) {
 			}
 			if err := s.UpdateData(tt.args.newdata, tt.args.lastSync); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateData() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_newConsumer(t *testing.T) {
-	type args struct {
-		fileName string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *consumer
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := newConsumer(tt.args.fileName)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("newConsumer() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newConsumer() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_newProducer(t *testing.T) {
-	type args struct {
-		fileName string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *producer
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := newProducer(tt.args.fileName)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("newProducer() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newProducer() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
