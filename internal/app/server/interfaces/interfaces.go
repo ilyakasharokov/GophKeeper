@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"gophkeeper/internal/app/server/authorization"
 	"gophkeeper/internal/common/models"
 	"time"
 )
@@ -14,4 +15,14 @@ type DBModel interface {
 	GetUpdates(ctx context.Context, userID string, after time.Time) ([]models.Note, error)
 	UpdateNote(ctx context.Context, userID string, note models.Note) error
 	DeleteNote(ctx context.Context, userID string, id string) error
+}
+
+type UserServiceModel interface {
+	RefreshToken(ctx context.Context, token string) (*authorization.TokenDetails, error)
+	CreateUser(ctx context.Context, user models.User) error
+	AuthUser(ctx context.Context, user models.User) (*authorization.TokenDetails, error)
+}
+
+type SyncServiceModel interface {
+	Sync(ctx context.Context, userID string, notes []models.Note, lastSyncDate time.Time) ([]models.Note, time.Time, error)
 }

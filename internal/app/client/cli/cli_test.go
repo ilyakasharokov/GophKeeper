@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"github.com/stretchr/testify/mock"
 	"gophkeeper/internal/app/client/user"
 	"gophkeeper/internal/common/models"
 	"gophkeeper/mocks"
@@ -11,6 +10,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/mock"
 )
 
 func TestCLI_Start(t *testing.T) {

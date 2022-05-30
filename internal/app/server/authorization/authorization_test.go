@@ -3,10 +3,11 @@ package authorization
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/metadata"
 	"reflect"
 	"testing"
 	"time"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -48,7 +49,8 @@ func TestExtractToken(t *testing.T) {
 	type args struct {
 		ctx context.Context
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	ctxWithToken := metadata.AppendToOutgoingContext(ctx, "authorization", fmt.Sprintf("Bearer %v", "token"))
 	tests := []struct {
 		name string

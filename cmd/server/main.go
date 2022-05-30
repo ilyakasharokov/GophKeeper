@@ -77,20 +77,3 @@ func main() {
 	defer cancelt()
 
 }
-
-/*func handleSignals(cancel context.CancelFunc, serverCancel func(ctx context.Context) error) {
-	sigint := make(chan os.Signal, 1)
-	signal.Notify(sigint, os.Interrupt)
-	ctxt, cancelt := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelt()
-	select {
-	case <-sigint:
-		cancel()
-		err := serverCancel(ctxt)
-		if err != nil {
-			log.Info().Err(err)
-		}
-		return
-	}
-}
-*/

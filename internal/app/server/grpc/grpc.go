@@ -2,7 +2,7 @@ package grpcserver
 
 import (
 	"context"
-	"gophkeeper/internal/app/server/service"
+	"gophkeeper/internal/app/server/interfaces"
 	customerrors "gophkeeper/internal/common/errors"
 	"gophkeeper/internal/common/models"
 	service2 "gophkeeper/internal/common/service"
@@ -14,12 +14,12 @@ import (
 // Server implement main methods for gRPC
 type Server struct {
 	proto.UnimplementedGophKeeperServer
-	userService *service.UserService
-	syncService *service.SyncService
+	userService interfaces.UserServiceModel
+	syncService interfaces.SyncServiceModel
 }
 
 // New instance for gRPC server
-func New(u *service.UserService, ss *service.SyncService) *Server {
+func New(u interfaces.UserServiceModel, ss interfaces.SyncServiceModel) *Server {
 	return &Server{
 		userService: u,
 		syncService: ss,
@@ -84,7 +84,7 @@ func (s *Server) Register(ctx context.Context, req *proto.RegisterRequest) (rsp 
 	}, nil
 }
 
-func (s *Server) CheckConn(_ context.Context, req *proto.CCRequest) (rsp *proto.CCResponse, err error) {
+func (s *Server) CheckConn(_ context.Context, _ *proto.CCRequest) (rsp *proto.CCResponse, err error) {
 	rsp = new(proto.CCResponse)
 	return rsp, nil
 }
