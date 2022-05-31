@@ -20,6 +20,8 @@ AppVersion=$(git tag --sort=-version:refname | head -n 1)
 FLAG="-X $TRG_PKG.BuildTime=$BUILD_TIME"
 FLAG="$FLAG -X $TRG_PKG.AppVersion=$AppVersion"
 
+echo $AppVersion > file.txt
+
 GOOS=windows GOARCH=amd64 go build -o bin/app-amd64.exe -ldflags "$FLAG" main.go
 
 GOOS=darwin GOARCH=amd64 go build -o bin/app-amd64-darwin -ldflags "$FLAG" main.go

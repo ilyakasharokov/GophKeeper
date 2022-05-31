@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"gophkeeper/cmd/client/configuration"
 	"gophkeeper/internal/app/client/cli"
 	grpcclient "gophkeeper/internal/app/client/grpc"
@@ -9,11 +11,18 @@ import (
 	"os"
 	"os/signal"
 	"time"
+)
 
-	"github.com/rs/zerolog/log"
+var (
+	BuildVersion = "N/A"
+	BuildDate    = "N/A"
+	BuildCommit  = "N/A"
 )
 
 func main() {
+	fmt.Printf("Build version: %v\n", BuildVersion)
+	fmt.Printf("Build date: %v\n", BuildDate)
+	fmt.Printf("Build commit: %v\n", BuildCommit)
 	_, cancel := context.WithCancel(context.Background())
 	c := configuration.New()
 	go handleSignals(cancel)
