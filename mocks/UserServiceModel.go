@@ -17,15 +17,15 @@ type UserServiceModel struct {
 }
 
 // AuthUser provides a mock function with given fields: ctx, user
-func (_m *UserServiceModel) AuthUser(ctx context.Context, user models.User) (*authorization.TokenDetails, error) {
+func (_m *UserServiceModel) AuthUser(ctx context.Context, user models.User) (*authorization.TokenInfo, error) {
 	ret := _m.Called(ctx, user)
 
-	var r0 *authorization.TokenDetails
-	if rf, ok := ret.Get(0).(func(context.Context, models.User) *authorization.TokenDetails); ok {
+	var r0 *authorization.TokenInfo
+	if rf, ok := ret.Get(0).(func(context.Context, models.User) *authorization.TokenInfo); ok {
 		r0 = rf(ctx, user)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*authorization.TokenDetails)
+			r0 = ret.Get(0).(*authorization.TokenInfo)
 		}
 	}
 
@@ -54,15 +54,15 @@ func (_m *UserServiceModel) CreateUser(ctx context.Context, user models.User) er
 }
 
 // RefreshToken provides a mock function with given fields: ctx, token
-func (_m *UserServiceModel) RefreshToken(ctx context.Context, token string) (*authorization.TokenDetails, error) {
+func (_m *UserServiceModel) RefreshToken(ctx context.Context, token string) (*authorization.TokenInfo, error) {
 	ret := _m.Called(ctx, token)
 
-	var r0 *authorization.TokenDetails
-	if rf, ok := ret.Get(0).(func(context.Context, string) *authorization.TokenDetails); ok {
+	var r0 *authorization.TokenInfo
+	if rf, ok := ret.Get(0).(func(context.Context, string) *authorization.TokenInfo); ok {
 		r0 = rf(ctx, token)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*authorization.TokenDetails)
+			r0 = ret.Get(0).(*authorization.TokenInfo)
 		}
 	}
 
