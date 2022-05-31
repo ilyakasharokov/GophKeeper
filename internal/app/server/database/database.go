@@ -1,4 +1,4 @@
-// Package db пакет для работы с базами данных
+// database package for work with postgres database
 package database
 
 import (
@@ -12,19 +12,19 @@ import (
 	"github.com/lib/pq"
 )
 
-// NewDB функция по созданию нового объекта для работы с базой данных
+// NewDB create new database from connection
 func NewDB(conn *sqlx.DB) *PGDB {
 	return &PGDB{
 		conn: conn,
 	}
 }
 
-// PGDB структура данных для подключения к базе данных
+// PGDB database structure
 type PGDB struct {
 	conn *sqlx.DB
 }
 
-// CreateUser функция для создание пользователя по модели пользователя
+// CreateUser create new user
 func (pg *PGDB) CreateUser(ctx context.Context, user models.User) error {
 	_, err := pg.conn.ExecContext(ctx, "INSERT INTO users (login, password) VALUES ($1, crypt($2, gen_salt('bf', 8)))",
 		user.Login, user.Password)
@@ -36,7 +36,7 @@ func (pg *PGDB) CreateUser(ctx context.Context, user models.User) error {
 	return err
 }
 
-// CheckUserPassword функция проверки соответствия пароля, возвращает так же id пользователя
+// CheckUserPassword check if there is user with such login and password and return his id
 func (pg *PGDB) CheckUserPassword(ctx context.Context, user models.User) (string, error) {
 	var result string
 	query, err := pg.conn.QueryxContext(ctx, `SELECT id FROM users WHERE login = $1 
@@ -53,7 +53,7 @@ func (pg *PGDB) CheckUserPassword(ctx context.Context, user models.User) (string
 	return result, err
 }
 
-// AddSecret функция дл добавления секрета пользователя
+// AddNote add user note
 func (pg *PGDB) AddNote(ctx context.Context, userID string, note models.Note) (string, error) {
 	id := ""
 	result, err := pg.conn.QueryxContext(ctx,
@@ -68,7 +68,7 @@ func (pg *PGDB) AddNote(ctx context.Context, userID string, note models.Note) (s
 	return id, err
 }
 
-// GetSecrets функция для получение всех секретов пользователя
+// GetNotes gets all user notes
 func (pg *PGDB) GetNotes(ctx context.Context, userID string) ([]models.Note, error) {
 	rows, err := pg.conn.QueryxContext(ctx, "SELECT id, user_id,secret_data FROM secrets WHERE user_id=$1 AND deleted_at IS NULL", userID)
 	if err != nil {
@@ -86,6 +86,7 @@ func (pg *PGDB) GetNotes(ctx context.Context, userID string) ([]models.Note, err
 	return result, err
 }
 
+// GetUpdates get user notes updated after date
 func (pg *PGDB) GetUpdates(ctx context.Context, userID string, after time.Time) ([]models.Note, error) {
 	rows, err := pg.conn.QueryxContext(ctx, `SELECT id, title, body, created_at, updated_at, deleted_at FROM user_notes WHERE user_id = $1 
         AND ( created_at > $2 OR updated_at > $2 OR deleted_at > $2)`, userID, after)
@@ -109,14 +110,14 @@ func (pg *PGDB) GetUpdates(ctx context.Context, userID string, after time.Time) 
 	return notes, nil
 }
 
-// UpdateNote функция для удаления секрета пользователя
+// UpdateNote update note with new content
 func (pg *PGDB) UpdateNote(ctx context.Context, userID string, note models.Note) error {
 	_, err := pg.conn.ExecContext(ctx, `UPDATE user_notes SET title=$1, body=$2, updated_at = current_timestamp WHERE id = $3 AND user_id = $4 AND updated_at < $5`,
 		note.Title, note.Body, note.ID, userID, note.UpdatedAt)
 	return err
 }
 
-// DeleteNote функция для удаления секрета пользователя
+// DeleteNote set note as deleted
 func (pg *PGDB) DeleteNote(ctx context.Context, userID string, id string) error {
 	_, err := pg.conn.ExecContext(ctx, `UPDATE user_notes SET deleted_at = current_timestamp WHERE id = $1 AND user_id = $2`,
 		id, userID)
