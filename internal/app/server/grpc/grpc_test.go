@@ -91,7 +91,7 @@ func TestServer_CheckConn(t *testing.T) {
 
 func TestServer_Login(t *testing.T) {
 	usm := new(mocks.UserServiceModel)
-	usm.On("AuthUser", mock.Anything, mock.Anything).Return(&authorization.TokenDetails{}, nil)
+	usm.On("AuthUser", mock.Anything, mock.Anything).Return(&authorization.TokenInfo{}, nil)
 	ssm := new(mocks.SyncServiceModel)
 
 	type fields struct {
@@ -143,7 +143,7 @@ func TestServer_Login(t *testing.T) {
 func TestServer_RefreshToken(t *testing.T) {
 	usm := new(mocks.UserServiceModel)
 	ssm := new(mocks.SyncServiceModel)
-	usm.On("RefreshToken", context.Background(), "refreshtoken").Return(&authorization.TokenDetails{}, nil)
+	usm.On("RefreshToken", context.Background(), "refreshtoken").Return(&authorization.TokenInfo{}, nil)
 	type fields struct {
 		UnimplementedGophKeeperServer proto.UnimplementedGophKeeperServer
 		userService                   interfaces.UserServiceModel
@@ -188,7 +188,7 @@ func TestServer_RefreshToken(t *testing.T) {
 func TestServer_Register(t *testing.T) {
 	usm := new(mocks.UserServiceModel)
 	usm.On("CreateUser", mock.Anything, mock.Anything).Return(nil)
-	usm.On("AuthUser", mock.Anything, mock.Anything).Return(&authorization.TokenDetails{}, nil)
+	usm.On("AuthUser", mock.Anything, mock.Anything).Return(&authorization.TokenInfo{}, nil)
 	ssm := new(mocks.SyncServiceModel)
 	type fields struct {
 		UnimplementedGophKeeperServer proto.UnimplementedGophKeeperServer
@@ -234,7 +234,7 @@ func TestServer_Register(t *testing.T) {
 func TestServer_SyncData(t *testing.T) {
 	usm := new(mocks.UserServiceModel)
 	usm.On("CreateUser", mock.Anything, mock.Anything).Return(nil)
-	usm.On("AuthUser", mock.Anything, mock.Anything).Return(&authorization.TokenDetails{}, nil)
+	usm.On("AuthUser", mock.Anything, mock.Anything).Return(&authorization.TokenInfo{}, nil)
 	ssm := new(mocks.SyncServiceModel)
 	type fields struct {
 		UnimplementedGophKeeperServer proto.UnimplementedGophKeeperServer

@@ -132,7 +132,7 @@ func TestUserService_AuthUser(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *authorization.TokenDetails
+		want    *authorization.TokenInfo
 		wantErr bool
 	}{
 		{name: "ok", fields: fields{
@@ -217,7 +217,7 @@ func TestUserService_RefreshToken(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *authorization.TokenDetails
+		want    *authorization.TokenInfo
 		wantErr bool
 	}{
 		{name: "ok", fields: struct {

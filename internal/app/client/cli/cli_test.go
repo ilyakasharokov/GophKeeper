@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"gophkeeper/internal/app/client/user"
 	"gophkeeper/internal/common/models"
 	"gophkeeper/mocks"
 	"io"
@@ -19,7 +18,7 @@ func TestCLI_Start(t *testing.T) {
 		state   int
 		client  GRPCClientModel
 		storage StorageModel
-		user    *user.User
+		user    *models.User
 	}
 	type args struct {
 		cancel context.CancelFunc
@@ -52,13 +51,13 @@ func TestCLI_addNote(t *testing.T) {
 		state   int
 		client  GRPCClientModel
 		storage StorageModel
-		user    *user.User
+		user    *models.User
 	}
 	gmock := new(mocks.GRPCClientModel)
 	storage := new(mocks.StorageModel)
 	storage.On("AddItem", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	storage.On("Flush", mock.Anything).Return(nil)
-	usr := &user.User{
+	usr := &models.User{
 		ID:           "sadfdasf",
 		Login:        "ilya",
 		PasswordHash: []byte("qeqweqwewqeqqw"),
@@ -73,7 +72,7 @@ func TestCLI_addNote(t *testing.T) {
 			state   int
 			client  GRPCClientModel
 			storage StorageModel
-			user    *user.User
+			user    *models.User
 		}{state: 0, client: gmock, storage: storage, user: usr}, wantErr: false},
 	}
 	for _, tt := range tests {
@@ -96,7 +95,7 @@ func TestCLI_auth(t *testing.T) {
 		state   int
 		client  GRPCClientModel
 		storage StorageModel
-		user    *user.User
+		user    *models.User
 	}
 	gmock := new(mocks.GRPCClientModel)
 	storage := new(mocks.StorageModel)
@@ -105,7 +104,7 @@ func TestCLI_auth(t *testing.T) {
 	storage.On("CheckFile").Return(false)
 	storage.On("UpdateData", []models.Note{}, mock.Anything).Return(nil)
 	storage.On("Flush", mock.Anything).Return(nil)
-	usr := user.User{
+	usr := models.User{
 		ID:    "",
 		Login: "",
 		Token: "",
@@ -113,7 +112,7 @@ func TestCLI_auth(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields fields
-		// want    user.User
+		// want    models.User
 		wantErr bool
 	}{
 		{name: "ok", fields: fields{
@@ -145,7 +144,7 @@ func TestCLI_loggedIn(t *testing.T) {
 		state   int
 		client  GRPCClientModel
 		storage StorageModel
-		user    *user.User
+		user    *models.User
 	}
 	type args struct {
 		cancel context.CancelFunc
@@ -184,12 +183,12 @@ func TestCLI_registration(t *testing.T) {
 		state   int
 		client  GRPCClientModel
 		storage StorageModel
-		user    *user.User
+		user    *models.User
 	}
 	tests := []struct {
 		name    string
 		fields  fields
-		want    user.User
+		want    models.User
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -219,7 +218,7 @@ func TestCLI_start(t *testing.T) {
 		state   int
 		client  GRPCClientModel
 		storage StorageModel
-		user    *user.User
+		user    *models.User
 	}
 	type args struct {
 		cancel context.CancelFunc

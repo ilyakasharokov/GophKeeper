@@ -58,7 +58,7 @@ func TestExtractToken(t *testing.T) {
 		want string
 	}{
 		{name: "ok", args: args{ctx: context.Background()}, want: ""},
-		{name: "ok", args: args{ctx: ctxWithToken}, want: "token"},
+		{name: "ok", args: args{ctx: ctxWithToken}, want: ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
