@@ -40,11 +40,11 @@ build-client: $(CLIENT_LINUX) $(CLIENT_WINDOWS) $(CLIENT_DARWIN)
 
 build-server:
 	@echo "Building the server app to the bin dir"
-	CGO_ENABLED=1 go build -o ./bin/gk \
-		-ldflags="-X 'GophKeeper/cmd/server/main.buildCommit=$(GIT_COMMIT)'\
-		 -X 'GophKeeper/cmd/server/main.buildVersion=$(VERSION)'\
-		 -X 'GophKeeper/cmd/server/main.buildUser=$(USER)'\
-		  -X 'GophKeeper/cmd/server/main.buildDate=$(BUILD_DATE)'" \
+	CGO_ENABLED=1 go build -o ./bin/gophkeeper_srv \
+		-ldflags="-X 'main.BuildCommit=$(GIT_COMMIT)'\
+		 -X 'main.BuildVersion=$(VERSION)'\
+		 -X 'main.BuildUser=$(USER)'\
+		  -X 'main.BuildDate=$(BUILD_DATE)'" \
 		./cmd/server/*.go
 
 clean: ## Remove previous build

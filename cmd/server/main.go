@@ -23,7 +23,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+var (
+	BuildVersion = "N/A"
+	BuildDate    = "N/A"
+	BuildCommit  = "N/A"
+)
+
 func main() {
+	fmt.Printf("Build version: %v\n", BuildVersion)
+	fmt.Printf("Build date: %v\n", BuildDate)
+	fmt.Printf("Build commit: %v\n", BuildCommit)
 	ctx, cancel := context.WithCancel(context.Background())
 	cfg := configuration.New()
 	s := grpc.NewServer(
@@ -69,6 +78,7 @@ func main() {
 		syscall.SIGQUIT)
 	select {
 	case <-sigint:
+		fmt.Println("stop grpc server")
 		s.Stop()
 		cancel()
 	case <-ctx.Done():
