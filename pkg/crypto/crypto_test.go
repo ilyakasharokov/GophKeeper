@@ -10,13 +10,18 @@ func TestDecrypt(t *testing.T) {
 		key  []byte
 		text []byte
 	}
+	hash := Hash("ilya")
+	text := []byte("mytext")
+	enc, _ := Encrypt(hash, text)
 	tests := []struct {
 		name    string
 		args    args
 		want    []byte
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "ok", args: args{key: hash, text: enc}, want: text,
+			wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -37,23 +42,22 @@ func TestEncrypt(t *testing.T) {
 		key  []byte
 		text []byte
 	}
+	hash := Hash("ilya")
+	text := []byte("mytext")
 	tests := []struct {
 		name    string
 		args    args
 		want    []byte
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: args{key: hash, text: text}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Encrypt(tt.args.key, tt.args.text)
+			_, err := Encrypt(tt.args.key, tt.args.text)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Encrypt() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Encrypt() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -68,7 +72,7 @@ func TestHash(t *testing.T) {
 		args args
 		want []byte
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: args{s: "ilya"}, want: []byte{122, 100, 130, 151, 202, 198, 98, 8, 136, 159, 110, 213, 164, 250, 142, 67, 81, 100, 20, 186, 131, 229, 196, 217, 141, 5, 232, 89, 158, 237, 230, 181}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

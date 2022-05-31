@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"gophkeeper/internal/app/server/database"
 	"gophkeeper/internal/app/server/interfaces"
 	"gophkeeper/internal/common/models"
 	"time"
@@ -15,7 +14,7 @@ type SyncService struct {
 }
 
 // NewSyncService функция создания сервиса для работы с пользователями
-func NewSyncService(db *database.PGDB) *SyncService {
+func NewSyncService(db interfaces.DBModel) *SyncService {
 	return &SyncService{
 		db: db,
 	}

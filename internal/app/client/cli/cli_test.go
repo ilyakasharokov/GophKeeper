@@ -263,7 +263,10 @@ func TestNew(t *testing.T) {
 		args args
 		want *CLI
 	}{
-		// TODO: Add test cases.
+		{name: "ok", args: args{
+			client: nil,
+			s:      nil,
+		}, want: &CLI{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -309,7 +312,10 @@ func Test_readString(t *testing.T) {
 		name string
 		want string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "ok",
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
