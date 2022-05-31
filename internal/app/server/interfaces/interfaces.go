@@ -18,9 +18,9 @@ type DBModel interface {
 }
 
 type UserServiceModel interface {
-	RefreshToken(ctx context.Context, token string) (*authorization.TokenDetails, error)
+	RefreshToken(ctx context.Context, token string) (*authorization.TokenInfo, error)
 	CreateUser(ctx context.Context, user models.User) error
-	AuthUser(ctx context.Context, user models.User) (*authorization.TokenDetails, error)
+	AuthUser(ctx context.Context, user models.User) (*authorization.TokenInfo, error)
 }
 
 type SyncServiceModel interface {

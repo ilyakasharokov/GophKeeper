@@ -35,7 +35,7 @@ func (us *UserService) CreateUser(ctx context.Context, user models.User) error {
 }
 
 // AuthUser функия авторизации пользователя
-func (us *UserService) AuthUser(ctx context.Context, user models.User) (*authorization.TokenDetails, error) {
+func (us *UserService) AuthUser(ctx context.Context, user models.User) (*authorization.TokenInfo, error) {
 	userID, err := us.db.CheckUserPassword(ctx, user)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (us *UserService) AuthUser(ctx context.Context, user models.User) (*authori
 }
 
 // RefreshToken функиця по обновлению токенов пользователя
-func (us *UserService) RefreshToken(_ context.Context, refreshToken string) (*authorization.TokenDetails, error) {
+func (us *UserService) RefreshToken(_ context.Context, refreshToken string) (*authorization.TokenInfo, error) {
 	return authorization.RefreshToken(refreshToken, us.AccessTokenLiveTimeMinutes, us.RefreshTokenLiveTimeDays,
 		us.AccessTokenSecret, us.RefreshTokenSecret)
 }

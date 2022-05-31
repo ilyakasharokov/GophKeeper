@@ -1,4 +1,4 @@
-// Package authorization пакет для авторизации
+// Package authorization for token authorization
 package authorization
 
 import (
@@ -12,18 +12,18 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 )
 
-// TokenDetails - сущность для хранения информации о токенах
-type TokenDetails struct {
+// TokenInfo containt tokens and expiration dates
+type TokenInfo struct {
 	AccessToken  string
 	RefreshToken string
 	AtExpires    int64
 	RtExpires    int64
 }
 
-// CreateToken фнукция создания токена по пользовательскому id
+// CreateToken create tokens from userID
 func CreateToken(userID string, accessTokenLiveTimeMinutes int, refreshTokenLiveTimeDays int,
-	accessTokenSecret string, refreshTokenSecret string) (*TokenDetails, error) {
-	td := &TokenDetails{}
+	accessTokenSecret string, refreshTokenSecret string) (*TokenInfo, error) {
+	td := &TokenInfo{}
 	td.AtExpires = time.Now().Add(time.Minute * time.Duration(accessTokenLiveTimeMinutes)).Unix()
 	td.RtExpires = time.Now().Add(time.Hour * 24 * time.Duration(refreshTokenLiveTimeDays)).Unix()
 
@@ -48,7 +48,7 @@ func CreateToken(userID string, accessTokenLiveTimeMinutes int, refreshTokenLive
 	return td, nil
 }
 
-// VerifyToken - фукнция проверки токена
+// VerifyToken - verify token
 func VerifyToken(ctx context.Context, accessSecret string) (*jwt.Token, error) {
 	tokenString := ExtractToken(ctx)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -63,7 +63,7 @@ func VerifyToken(ctx context.Context, accessSecret string) (*jwt.Token, error) {
 	return token, nil
 }
 
-// TokenValid функция проверки валидности токена
+// TokenValid - check if token is valid and return userID
 func TokenValid(ctx context.Context, accessSecret string) (string, error) {
 	token, err := VerifyToken(ctx, accessSecret)
 	if err != nil {
@@ -77,6 +77,7 @@ func TokenValid(ctx context.Context, accessSecret string) (string, error) {
 	return t, nil
 }
 
+// ExtractToken - extract token from meta
 func ExtractToken(ctx context.Context) string {
 	token := metautils.ExtractIncoming(ctx).Get("authorization")
 	strArr := strings.Split(token, " ")
@@ -86,9 +87,9 @@ func ExtractToken(ctx context.Context) string {
 	return ""
 }
 
-// RefreshToken функция для выдачи новых токенов, по токену для обновления
+// RefreshToken refresh access token
 func RefreshToken(refresh string, accessTokenLiveTimeMinutes int, refreshTokenLiveTimeDays int,
-	accessTokenSecret string, refreshTokenSecret string) (*TokenDetails, error) {
+	accessTokenSecret string, refreshTokenSecret string) (*TokenInfo, error) {
 
 	token, err := jwt.Parse(refresh, func(token *jwt.Token) (interface{}, error) {
 

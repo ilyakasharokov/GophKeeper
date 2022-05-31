@@ -23,7 +23,7 @@ func TestCreateToken(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *TokenDetails
+		want    *TokenInfo
 		wantErr bool
 	}{
 		{name: "ok", args: struct {
@@ -32,7 +32,7 @@ func TestCreateToken(t *testing.T) {
 			refreshTokenLiveTimeDays   int
 			accessTokenSecret          string
 			refreshTokenSecret         string
-		}{userID: "", accessTokenLiveTimeMinutes: 0, refreshTokenLiveTimeDays: 0, accessTokenSecret: "", refreshTokenSecret: ""}, want: &TokenDetails{}, wantErr: false},
+		}{userID: "", accessTokenLiveTimeMinutes: 0, refreshTokenLiveTimeDays: 0, accessTokenSecret: "", refreshTokenSecret: ""}, want: &TokenInfo{}, wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -57,8 +57,8 @@ func TestExtractToken(t *testing.T) {
 		args args
 		want string
 	}{
-		{name: "ok", args: struct{ ctx context.Context }{ctx: context.Background()}, want: ""},
-		{name: "ok", args: struct{ ctx context.Context }{ctx: ctxWithToken}, want: ""},
+		{name: "ok", args: args{ctx: context.Background()}, want: ""},
+		{name: "ok", args: args{ctx: ctxWithToken}, want: "token"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestRefreshToken(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *TokenDetails
+		want    *TokenInfo
 		wantErr bool
 	}{
 		{name: "ok", args: args{
