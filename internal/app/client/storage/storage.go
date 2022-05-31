@@ -1,3 +1,4 @@
+// storage keeps data in memory and save it to disk
 package storage
 
 import (
@@ -31,6 +32,7 @@ func New(fileStoragePath string) *Storage {
 	return &storage
 }
 
+// AddItem to storage
 func (s *Storage) AddItem(title string, body string, key []byte) error {
 	encrypted, err := crypto.Encrypt(key, []byte(body))
 	if err != nil {
@@ -45,6 +47,7 @@ func (s *Storage) AddItem(title string, body string, key []byte) error {
 	return nil
 }
 
+// GetNotes gets all notes or only non-delited notes
 func (s *Storage) GetNotes(all bool) []models.Note {
 	ret := make([]models.Note, 0)
 	for _, d := range s.Data {
@@ -55,6 +58,7 @@ func (s *Storage) GetNotes(all bool) []models.Note {
 	return ret
 }
 
+// GetNonSyncedData get notes that were update after last synchronization
 func (s *Storage) GetNonSyncedData() []models.Note {
 	data := make([]models.Note, 0)
 	for _, d := range s.Data {
@@ -123,7 +127,7 @@ func (storage *Storage) CheckFile() bool {
 	return false
 }
 
-// load local data storage from file
+// Load local data storage from file
 func (storage *Storage) Load(hash []byte) error {
 	f, err := os.OpenFile(storage.fileStoragePath, os.O_RDONLY, 0777)
 	if err != nil {
@@ -153,6 +157,7 @@ func (storage *Storage) Load(hash []byte) error {
 	return errors.New("data is corrupted!")
 }
 
+// GetByIndex get note by index
 func (s *Storage) GetByIndex(index int) (models.Note, error) {
 	if index > len(s.Data)-1 {
 		return models.Note{}, errors.New("no such note")
@@ -160,6 +165,7 @@ func (s *Storage) GetByIndex(index int) (models.Note, error) {
 	return s.Data[index], nil
 }
 
+// SetDeleted delete local node or set node deleted if it was synchronized
 func (s *Storage) SetDeleted(index int) error {
 	if index > len(s.Data)-1 {
 		return errors.New("no such note")
@@ -177,10 +183,12 @@ func (s *Storage) SetDeleted(index int) error {
 	return nil
 }
 
+// GetLastSyncDate get last synchronization data
 func (s *Storage) GetLastSyncDate() time.Time {
 	return s.LastSyncDate
 }
 
+// GetDataLen get count of notes in the storage
 func (s *Storage) GetDataLen() int {
 	return len(s.Data)
 }

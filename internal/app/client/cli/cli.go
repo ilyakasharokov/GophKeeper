@@ -1,10 +1,11 @@
+// cli - command line interface of the app
 package cli
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"gophkeeper/internal/app/client/user"
+
 	"gophkeeper/internal/common/models"
 	"gophkeeper/pkg/crypto"
 	"regexp"
@@ -21,7 +22,7 @@ type CLI struct {
 	state   int
 	client  GRPCClientModel
 	storage StorageModel
-	user    *user.User
+	user    *models.User
 }
 
 type GRPCClientModel interface {
@@ -50,21 +51,21 @@ var deleteCmdRegExp = regexp.MustCompile(`^d(\d+)$`)
 var viewCmdRegExp = regexp.MustCompile(`^v(\d+)$`)
 
 // registration register and return user if success
-func (cli *CLI) registration() (user.User, error) {
+func (cli *CLI) registration() (models.User, error) {
 	login, pwd := readAuth()
 	status, token, err := cli.client.Registration(login, pwd)
 	if err != nil {
-		return user.User{}, err
+		return models.User{}, err
 	}
 	if token == "" {
-		return user.User{}, errors.New(status)
+		return models.User{}, errors.New(status)
 	}
 	hash := crypto.Hash(pwd)
-	return user.User{Login: login, PasswordHash: hash, Token: token}, nil
+	return models.User{Login: login, PasswordHash: hash, Token: token}, nil
 }
 
 // auth authenticate and return user if success
-func (cli *CLI) auth() (user.User, error) {
+func (cli *CLI) auth() (models.User, error) {
 	login, pwd := readAuth()
 	hash := crypto.Hash(pwd)
 	var err error
@@ -72,13 +73,13 @@ func (cli *CLI) auth() (user.User, error) {
 	if cli.client != nil {
 		token, err = cli.client.Login(login, pwd)
 		if err != nil {
-			return user.User{}, errors.New("can't auth remotely")
+			return models.User{}, errors.New("can't auth remotely")
 		}
 	}
 	if cli.storage.CheckFile() {
 		err = cli.storage.Load(hash)
 		if err != nil {
-			return user.User{}, err
+			return models.User{}, err
 		}
 	} else {
 		newData, newLastSync, err := cli.client.SyncData(nil, time.Time{})
@@ -94,7 +95,7 @@ func (cli *CLI) auth() (user.User, error) {
 			fmt.Println("save notes error (" + err.Error() + ")")
 		}
 	}
-	return user.User{Login: login, PasswordHash: hash, Token: token}, nil
+	return models.User{Login: login, PasswordHash: hash, Token: token}, nil
 
 }
 
@@ -149,6 +150,7 @@ func (cli *CLI) Start(cancel context.CancelFunc) error {
 	}
 }
 
+// start unauthorized user interface
 func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
 	if cli.client != nil && !cli.storage.CheckFile() {
 		fmt.Print("r - registration | ")
@@ -185,6 +187,7 @@ func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
 	return false, nil
 }
 
+// addNote get new note's data from user input and add it to storage
 func (cli *CLI) addNote() (err error) {
 	fmt.Println("Enter note's title")
 	title := readString()
@@ -198,6 +201,7 @@ func (cli *CLI) addNote() (err error) {
 	return err
 }
 
+// loggedIn interface for logged in user
 func (cli *CLI) loggedIn(cancel context.CancelFunc) (quit bool, err error) {
 	fmt.Println("Welcome, " + cli.user.Login)
 	showBar := true

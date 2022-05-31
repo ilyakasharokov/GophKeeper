@@ -3,9 +3,11 @@ package models
 import "time"
 
 type User struct {
-	ID       string
-	Login    string
-	Password string
+	ID           string
+	Login        string
+	Password     string
+	PasswordHash []byte
+	Token        string
 }
 
 type Note struct {
