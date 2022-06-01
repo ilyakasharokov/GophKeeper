@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"gophkeeper/internal/app/server/interfaces"
-	"gophkeeper/internal/common/models"
+	"gophkeeper/pkg/models"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -46,7 +46,7 @@ func (s *SyncService) Sync(ctx context.Context, userID string, notes []models.No
 			}
 		}
 	}
-	updates, err := s.db.GetUpdates(ctx, userID, lastSyncDate)
+	updates, err := s.db.GetNotesAfter(ctx, userID, lastSyncDate)
 	if err != nil {
 		log.Err(err).Msg("get updates error")
 	}

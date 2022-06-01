@@ -3,10 +3,9 @@ package grpcserver
 import (
 	"context"
 	"gophkeeper/internal/app/server/interfaces"
-	customerrors "gophkeeper/internal/common/errors"
-	"gophkeeper/internal/common/models"
-	service2 "gophkeeper/internal/common/service"
 	proto "gophkeeper/pkg/grpc/proto"
+	"gophkeeper/pkg/models"
+	service2 "gophkeeper/pkg/service"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -35,7 +34,7 @@ func (s *Server) Login(ctx context.Context, req *proto.LoginRequest) (rsp *proto
 	tokens, err := s.userService.AuthUser(ctx, user)
 	if err != nil {
 		return &proto.LoginResponse{
-			Status: customerrors.ParseError(err),
+			Status: err.Error(),
 		}, err
 	}
 	return &proto.LoginResponse{
@@ -50,7 +49,7 @@ func (s *Server) RefreshToken(ctx context.Context, req *proto.RefreshTokenReques
 	tokens, err := s.userService.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		return &proto.LoginResponse{
-			Status: customerrors.ParseError(err),
+			Status: err.Error(),
 		}, err
 	}
 	return &proto.LoginResponse{
@@ -68,13 +67,13 @@ func (s *Server) Register(ctx context.Context, req *proto.RegisterRequest) (rsp 
 	err = s.userService.CreateUser(ctx, user)
 	if err != nil {
 		return &proto.RegisterResponse{
-			Status: customerrors.ParseError(err),
+			Status: err.Error(),
 		}, nil
 	}
 	tokens, err := s.userService.AuthUser(ctx, user)
 	if err != nil {
 		return &proto.RegisterResponse{
-			Status: customerrors.ParseError(err),
+			Status: err.Error(),
 		}, nil
 	}
 	return &proto.RegisterResponse{

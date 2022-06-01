@@ -4,7 +4,7 @@ import (
 	"context"
 	"gophkeeper/internal/app/server/authorization"
 	"gophkeeper/internal/app/server/interfaces"
-	"gophkeeper/mocks"
+	"gophkeeper/internal/mocks"
 	proto "gophkeeper/pkg/grpc/proto"
 	"reflect"
 	"testing"

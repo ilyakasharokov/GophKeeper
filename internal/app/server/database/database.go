@@ -3,8 +3,8 @@ package database
 
 import (
 	"context"
-	myerrors "gophkeeper/internal/common/errors"
-	"gophkeeper/internal/common/models"
+	"gophkeeper/pkg/errors"
+	"gophkeeper/pkg/models"
 	"time"
 
 	"github.com/jackc/pgerrcode"
@@ -30,7 +30,7 @@ func (pg *PGDB) CreateUser(ctx context.Context, user models.User) error {
 		user.Login, user.Password)
 	if err, ok := err.(*pq.Error); ok {
 		if err.Code == pgerrcode.UniqueViolation {
-			return myerrors.NewError(err, "user already exists")
+			return apperrors.ErrUserAlreadyExist
 		}
 	}
 	return err
@@ -43,12 +43,12 @@ func (pg *PGDB) CheckUserPassword(ctx context.Context, user models.User) (string
                        AND password = crypt($2, password)`,
 		user.Login, user.Password)
 	if err != nil {
-		return result, myerrors.NewError(err, "can't find user")
+		return result, apperrors.ErrNoSuchUser
 	}
 	query.Next()
 	err = query.Scan(&result)
 	if err != nil {
-		return result, myerrors.NewError(err, "error with getting user_id")
+		return result, err
 	}
 	return result, err
 }
@@ -87,7 +87,7 @@ func (pg *PGDB) GetNotes(ctx context.Context, userID string) ([]models.Note, err
 }
 
 // GetUpdates get user notes updated after date
-func (pg *PGDB) GetUpdates(ctx context.Context, userID string, after time.Time) ([]models.Note, error) {
+func (pg *PGDB) GetNotesAfter(ctx context.Context, userID string, after time.Time) ([]models.Note, error) {
 	rows, err := pg.conn.QueryxContext(ctx, `SELECT id, title, body, created_at, updated_at, deleted_at FROM user_notes WHERE user_id = $1 
         AND ( created_at > $2 OR updated_at > $2 OR deleted_at > $2)`, userID, after)
 	if err != nil {

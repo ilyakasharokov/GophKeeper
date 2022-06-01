@@ -6,8 +6,8 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"gophkeeper/internal/common/models"
 	"gophkeeper/pkg/crypto"
+	"gophkeeper/pkg/models"
 	"io/ioutil"
 	"os"
 	"time"
@@ -32,8 +32,8 @@ func New(fileStoragePath string) *Storage {
 	return &storage
 }
 
-// AddItem to storage
-func (s *Storage) AddItem(title string, body string, key []byte) error {
+// AddNote to local storage
+func (s *Storage) AddNote(title string, body string, key []byte) error {
 	encrypted, err := crypto.Encrypt(key, []byte(body))
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (s *Storage) AddItem(title string, body string, key []byte) error {
 	return nil
 }
 
-// GetNotes gets all notes or only non-delited notes
+// GetNotes gets all notes or only non-deleted notes
 func (s *Storage) GetNotes(all bool) []models.Note {
 	ret := make([]models.Note, 0)
 	for _, d := range s.Data {
@@ -56,49 +56,6 @@ func (s *Storage) GetNotes(all bool) []models.Note {
 		}
 	}
 	return ret
-}
-
-// GetNonSyncedData get notes that were update after last synchronization
-func (s *Storage) GetNonSyncedData() []models.Note {
-	data := make([]models.Note, 0)
-	for _, d := range s.Data {
-		if d.DeletedAt.After(s.LastSyncDate) || d.CreatedAt.After(s.LastSyncDate) || d.UpdatedAt.After(s.LastSyncDate) {
-			data = append(data, d)
-		}
-	}
-	return data
-}
-
-// Updatedata обновляет записи в коллекции, удаляет записи с 0 id, добавляет новые
-func (s *Storage) UpdateData(newdata []models.Note, lastSync time.Time) error {
-	filtered := make([]models.Note, 0)
-	// удаление не синхронизированых и обновление синхронизированых
-	for _, d := range s.Data {
-		if d.ID == "" || d.Deleted {
-			continue
-		}
-		touched := false
-		for _, nd := range newdata {
-			if nd.ID == d.ID {
-				if !nd.Deleted {
-					filtered = append(filtered, nd)
-				}
-				touched = true
-			}
-		}
-		if !touched {
-			filtered = append(filtered, d)
-		}
-	}
-	// добавление новых
-	for _, nd := range newdata {
-		if nd.CreatedAt.After(s.LastSyncDate) && !nd.Deleted {
-			filtered = append(filtered, nd)
-		}
-	}
-	s.LastSyncDate = lastSync
-	s.Data = filtered
-	return nil
 }
 
 // Flush save storage to file
@@ -157,16 +114,16 @@ func (storage *Storage) Load(hash []byte) error {
 	return errors.New("data is corrupted!")
 }
 
-// GetByIndex get note by index
-func (s *Storage) GetByIndex(index int) (models.Note, error) {
+// GetNote get note by index
+func (s *Storage) GetNote(index int) (models.Note, error) {
 	if index > len(s.Data)-1 {
 		return models.Note{}, errors.New("no such note")
 	}
 	return s.Data[index], nil
 }
 
-// SetDeleted delete local node or set node deleted if it was synchronized
-func (s *Storage) SetDeleted(index int) error {
+// DeleteNode delete local node or set node deleted if it was synchronized
+func (s *Storage) DeleteNote(index int) error {
 	if index > len(s.Data)-1 {
 		return errors.New("no such note")
 	}
@@ -188,7 +145,17 @@ func (s *Storage) GetLastSyncDate() time.Time {
 	return s.LastSyncDate
 }
 
-// GetDataLen get count of notes in the storage
-func (s *Storage) GetDataLen() int {
+// SetLastSyncDate set last synchronization data
+func (s *Storage) SetLastSyncDate(date time.Time) {
+	s.LastSyncDate = date
+}
+
+// GetNotesCount get count of notes in the storage
+func (s *Storage) GetNotesCount() int {
 	return len(s.Data)
+}
+
+// SetNotes reset storage with new data
+func (s *Storage) SetNotes(notes []models.Note) {
+	s.Data = notes
 }

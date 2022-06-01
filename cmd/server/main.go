@@ -3,23 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/jmoiron/sqlx"
 	"gophkeeper/cmd/server/configuration"
 	"gophkeeper/internal/app/server/authorization"
 	"gophkeeper/internal/app/server/database"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
-
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
-	"github.com/jmoiron/sqlx"
 
 	grpcserver "gophkeeper/internal/app/server/grpc"
 	"gophkeeper/internal/app/server/service"
 	proto "gophkeeper/pkg/grpc/proto"
 	"net"
 
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 )
 
@@ -83,7 +82,4 @@ func main() {
 		cancel()
 	case <-ctx.Done():
 	}
-	_, cancelt := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelt()
-
 }

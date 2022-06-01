@@ -5,9 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"gophkeeper/internal/common/models"
-	"gophkeeper/internal/common/service"
 	proto "gophkeeper/pkg/grpc/proto"
+	"gophkeeper/pkg/models"
+	"gophkeeper/pkg/service"
 	"time"
 
 	"google.golang.org/grpc/credentials/insecure"
@@ -34,19 +34,19 @@ func New(grpcAddr string, tm time.Duration) (*Client, error) {
 		log.Err(err).Msg("cannot dial server")
 		return nil, err
 	}
-	service := proto.NewGophKeeperClient(cc)
+	srv := proto.NewGophKeeperClient(cc)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	req := &proto.CCRequest{}
-	_, err = service.CheckConn(ctx, req)
+	_, err = srv.CheckConn(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return &Client{cc, service, "", "", tm}, nil
+	return &Client{cc, srv, "", "", tm}, nil
 }
 
 // Login user and returns the access token
-func (client *Client) Login(login string, pwd string) (string, error) {
+func (client *Client) Login(login string, pwd string) (token string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), client.tm*time.Second)
 	defer cancel()
 	req := &proto.LoginRequest{
@@ -64,7 +64,7 @@ func (client *Client) Login(login string, pwd string) (string, error) {
 }
 
 // Registration create user and returns the access token
-func (client *Client) Registration(login string, pwd string) (string, string, error) {
+func (client *Client) Registration(login string, pwd string) (status string, token string, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), client.tm*time.Second)
 	defer cancel()
 

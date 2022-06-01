@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"github.com/jmoiron/sqlx"
-	"gophkeeper/internal/common/models"
+	"gophkeeper/pkg/models"
 	"reflect"
 	"testing"
 	"time"
@@ -214,13 +214,13 @@ func TestPGDB_GetUpdates(t *testing.T) {
 			pg := &PGDB{
 				conn: tt.fields.conn,
 			}
-			got, err := pg.GetUpdates(tt.args.ctx, tt.args.userID, tt.args.after)
+			got, err := pg.GetNotesAfter(tt.args.ctx, tt.args.userID, tt.args.after)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetUpdates() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetNonSyncNotes() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetUpdates() got = %v, want %v", got, tt.want)
+				t.Errorf("GetNonSyncNotes() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

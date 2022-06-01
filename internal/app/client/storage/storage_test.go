@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"gophkeeper/internal/common/models"
+	"gophkeeper/pkg/models"
 	"reflect"
 	"testing"
 	"time"
@@ -27,7 +27,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestStorage_AddItem(t *testing.T) {
+func TestStorage_AddNote(t *testing.T) {
 	type fields struct {
 		Data            []models.Note
 		LastSyncDate    time.Time
@@ -74,8 +74,8 @@ func TestStorage_AddItem(t *testing.T) {
 				fileStoragePath: tt.fields.fileStoragePath,
 				Check:           tt.fields.Check,
 			}
-			if err := s.AddItem(tt.args.title, tt.args.body, tt.args.key); (err != nil) != tt.wantErr {
-				t.Errorf("AddItem() error = %v, wantErr %v", err, tt.wantErr)
+			if err := s.AddNote(tt.args.title, tt.args.body, tt.args.key); (err != nil) != tt.wantErr {
+				t.Errorf("AddNote() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -191,7 +191,7 @@ func TestStorage_GetByIndex(t *testing.T) {
 				fileStoragePath: tt.fields.fileStoragePath,
 				Check:           tt.fields.Check,
 			}
-			got, err := s.GetByIndex(tt.args.index)
+			got, err := s.GetNote(tt.args.index)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetByIndex() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -230,7 +230,7 @@ func TestStorage_GetDataLen(t *testing.T) {
 				fileStoragePath: tt.fields.fileStoragePath,
 				Check:           tt.fields.Check,
 			}
-			if got := s.GetDataLen(); got != tt.want {
+			if got := s.GetNotesCount(); got != tt.want {
 				t.Errorf("GetDataLen() = %v, want %v", got, tt.want)
 			}
 		})
@@ -265,49 +265,6 @@ func TestStorage_GetLastSyncDate(t *testing.T) {
 			}
 			if got := s.GetLastSyncDate(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetLastSyncDate() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_GetNonSyncedData(t *testing.T) {
-	type fields struct {
-		Data            []models.Note
-		LastSyncDate    time.Time
-		fileStoragePath string
-		Check           bool
-	}
-	data := []models.Note{
-		{CreatedAt: time.Now().Add(1 * time.Minute)},
-		{CreatedAt: time.Now().Add(5 * time.Minute)},
-		{CreatedAt: time.Now().Add(-1 * time.Minute)},
-	}
-	flds := fields{
-		Data:         data,
-		LastSyncDate: time.Now(),
-	}
-	flds2 := fields{
-		Data:         data,
-		LastSyncDate: time.Now().Add(5 * time.Minute),
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []models.Note
-	}{
-		{name: "ok", fields: flds, want: []models.Note{flds.Data[0], flds.Data[1]}},
-		{name: "all", fields: flds2, want: []models.Note{}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Data:            tt.fields.Data,
-				LastSyncDate:    tt.fields.LastSyncDate,
-				fileStoragePath: tt.fields.fileStoragePath,
-				Check:           tt.fields.Check,
-			}
-			if got := s.GetNonSyncedData(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetNonSyncedData() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -414,7 +371,7 @@ func TestStorage_Load(t *testing.T) {
 	}
 }
 
-func TestStorage_SetDeleted(t *testing.T) {
+func TestStorage_DeleteNote(t *testing.T) {
 	type fields struct {
 		Data            []models.Note
 		LastSyncDate    time.Time
@@ -455,47 +412,8 @@ func TestStorage_SetDeleted(t *testing.T) {
 				fileStoragePath: tt.fields.fileStoragePath,
 				Check:           tt.fields.Check,
 			}
-			if err := s.SetDeleted(tt.args.index); (err != nil) != tt.wantErr {
+			if err := s.DeleteNote(tt.args.index); (err != nil) != tt.wantErr {
 				t.Errorf("SetDeleted() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestStorage_UpdateData(t *testing.T) {
-	type fields struct {
-		Data            []models.Note
-		LastSyncDate    time.Time
-		fileStoragePath string
-		Check           bool
-	}
-	type args struct {
-		newdata  []models.Note
-		lastSync time.Time
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{name: "ok", fields: struct {
-			Data            []models.Note
-			LastSyncDate    time.Time
-			fileStoragePath string
-			Check           bool
-		}{Data: []models.Note{}, LastSyncDate: time.Now()}, args: args{newdata: []models.Note{}}, wantErr: false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Data:            tt.fields.Data,
-				LastSyncDate:    tt.fields.LastSyncDate,
-				fileStoragePath: tt.fields.fileStoragePath,
-				Check:           tt.fields.Check,
-			}
-			if err := s.UpdateData(tt.args.newdata, tt.args.lastSync); (err != nil) != tt.wantErr {
-				t.Errorf("UpdateData() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

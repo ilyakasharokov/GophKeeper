@@ -4,7 +4,7 @@ import (
 	"context"
 	"gophkeeper/internal/app/server/authorization"
 	"gophkeeper/internal/app/server/interfaces"
-	"gophkeeper/internal/common/models"
+	"gophkeeper/pkg/models"
 )
 
 // NewUserService функция создания сервиса для работы с пользователями

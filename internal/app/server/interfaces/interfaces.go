@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 	"gophkeeper/internal/app/server/authorization"
-	"gophkeeper/internal/common/models"
+	"gophkeeper/pkg/models"
 	"time"
 )
 
@@ -12,7 +12,7 @@ type DBModel interface {
 	CheckUserPassword(ctx context.Context, user models.User) (string, error)
 	AddNote(ctx context.Context, userID string, note models.Note) (string, error)
 	GetNotes(ctx context.Context, userID string) ([]models.Note, error)
-	GetUpdates(ctx context.Context, userID string, after time.Time) ([]models.Note, error)
+	GetNotesAfter(ctx context.Context, userID string, after time.Time) ([]models.Note, error)
 	UpdateNote(ctx context.Context, userID string, note models.Note) error
 	DeleteNote(ctx context.Context, userID string, id string) error
 }

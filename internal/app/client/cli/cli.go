@@ -5,8 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gophkeeper/pkg/models"
 
-	"gophkeeper/internal/common/models"
 	"gophkeeper/pkg/crypto"
 	"regexp"
 	"strconv"
@@ -14,37 +14,39 @@ import (
 )
 
 const (
-	START = iota
-	LOGGED_IN
+	startState = iota
+	loggedInState
 )
 
 type CLI struct {
 	state   int
-	client  GRPCClientModel
-	storage StorageModel
+	auther  Authenticator
+	storage NotesKeeper
+	syncer  Syncer
 	user    *models.User
 }
 
-type GRPCClientModel interface {
-	Login(login string, pwd string) (string, error)
-	Registration(login string, pwd string) (string, string, error)
-	SyncData(notes []models.Note, lastSync time.Time) ([]models.Note, time.Time, error)
-	RefreshToken(ctx context.Context, refreshToken string) (string, string, error)
-	Close()
-}
-
-type StorageModel interface {
-	AddItem(title string, body string, key []byte) error
+type NotesKeeper interface {
+	AddNote(title string, body string, key []byte) error
 	GetNotes(all bool) []models.Note
-	GetNonSyncedData() []models.Note
-	UpdateData(newData []models.Note, lastSync time.Time) error
+	GetNote(index int) (models.Note, error)
+	DeleteNote(index int) error
+	GetNotesCount() int
 	Flush(hash []byte) error
 	CheckFile() bool
 	Load(hash []byte) error
-	GetByIndex(index int) (models.Note, error)
-	SetDeleted(index int) error
+}
+
+type Syncer interface {
+	Sync() error
+	GetNonSyncNotes() []models.Note
 	GetLastSyncDate() time.Time
-	GetDataLen() int
+	UpdateLastSyncDate()
+}
+
+type Authenticator interface {
+	Login(login string, pwd string) (string, error)
+	Registration(login string, pwd string) (string, string, error)
 }
 
 var deleteCmdRegExp = regexp.MustCompile(`^d(\d+)$`)
@@ -53,7 +55,7 @@ var viewCmdRegExp = regexp.MustCompile(`^v(\d+)$`)
 // registration register and return user if success
 func (cli *CLI) registration() (models.User, error) {
 	login, pwd := readAuth()
-	status, token, err := cli.client.Registration(login, pwd)
+	status, token, err := cli.auther.Registration(login, pwd)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -70,29 +72,22 @@ func (cli *CLI) auth() (models.User, error) {
 	hash := crypto.Hash(pwd)
 	var err error
 	var token string
-	if cli.client != nil {
-		token, err = cli.client.Login(login, pwd)
+	if cli.auther != nil { // login remote
+		token, err = cli.auther.Login(login, pwd)
 		if err != nil {
 			return models.User{}, errors.New("can't auth remotely")
 		}
 	}
-	if cli.storage.CheckFile() {
+	if cli.storage.CheckFile() { // local storage file found
 		err = cli.storage.Load(hash)
 		if err != nil {
 			return models.User{}, err
 		}
-	} else {
-		newData, newLastSync, err := cli.client.SyncData(nil, time.Time{})
+		cli.syncer.UpdateLastSyncDate()
+	} else { // new client for existing user
+		err := cli.syncer.Sync()
 		if err != nil {
-			fmt.Println("sync error (" + err.Error() + ")")
-		}
-		err = cli.storage.UpdateData(newData, newLastSync)
-		if err != nil {
-			fmt.Println("merge data error (" + err.Error() + ")")
-		}
-		err = cli.storage.Flush(hash)
-		if err != nil {
-			fmt.Println("save notes error (" + err.Error() + ")")
+			return models.User{}, err
 		}
 	}
 	return models.User{Login: login, PasswordHash: hash, Token: token}, nil
@@ -112,23 +107,27 @@ func readAuth() (login string, pwd string) {
 // readString read string from command line and remove line-break
 func readString() string {
 	str := ""
-	fmt.Scan(&str)
+	_, err := fmt.Scan(&str)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	return str
 }
 
+// Start CLI interface
 func (cli *CLI) Start(cancel context.CancelFunc) error {
-	if cli.client == nil && !cli.storage.CheckFile() {
+	if cli.auther == nil && !cli.storage.CheckFile() {
 		fmt.Println("Can't connect server for the first registration. Sorry, bye!")
 		return errors.New("no storage and no server connection")
 	}
-	if cli.client != nil {
+	if cli.auther != nil {
 		fmt.Println("-------------- GophKeeper -------------")
 	} else {
 		fmt.Println("-------- GophKeeper (offline mode) --------")
 	}
 	for {
 		switch cli.state {
-		case START:
+		case startState:
 			q, err := cli.start(cancel)
 			if err != nil {
 				return err
@@ -137,7 +136,7 @@ func (cli *CLI) Start(cancel context.CancelFunc) error {
 				return nil
 			}
 			break
-		case LOGGED_IN:
+		case loggedInState:
 			q, err := cli.loggedIn(cancel)
 			if err != nil {
 				return err
@@ -152,7 +151,7 @@ func (cli *CLI) Start(cancel context.CancelFunc) error {
 
 // start unauthorized user interface
 func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
-	if cli.client != nil && !cli.storage.CheckFile() {
+	if cli.auther != nil && !cli.storage.CheckFile() {
 		fmt.Print("r - registration | ")
 	}
 	fmt.Println("l - log in | q - exit")
@@ -164,7 +163,7 @@ func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
 		if err != nil {
 			fmt.Println("Registration error, try again later. (" + err.Error() + ") \n")
 		} else {
-			cli.state = LOGGED_IN
+			cli.state = loggedInState
 			cli.user = &usr
 		}
 		break
@@ -173,7 +172,7 @@ func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
 		if err != nil {
 			fmt.Println("wrong password")
 		} else {
-			cli.state = LOGGED_IN
+			cli.state = loggedInState
 			cli.user = &usr
 		}
 		break
@@ -188,17 +187,65 @@ func (cli *CLI) start(cancel context.CancelFunc) (quit bool, err error) {
 }
 
 // addNote get new note's data from user input and add it to storage
-func (cli *CLI) addNote() (err error) {
+func (cli *CLI) addNote() error {
 	fmt.Println("Enter note's title")
 	title := readString()
 	fmt.Println("Enter note's body")
 	body := readString()
-	err = cli.storage.AddItem(title, body, cli.user.PasswordHash)
+	err := cli.storage.AddNote(title, body, cli.user.PasswordHash)
+	if err != nil {
+		fmt.Println("add note error (" + err.Error() + ") \n")
+	} else {
+		fmt.Println("note added!")
+		err = cli.storage.Flush(cli.user.PasswordHash)
+		if err != nil {
+			fmt.Println("save storage file error (" + err.Error() + ")")
+		}
+	}
+	return nil
+}
+
+// showMenuBar output menu bar
+func (cli *CLI) showMenuBar(notesCount int, notesToSyncCount int, lastSyncDate string) {
+	fmt.Printf("You have %d notes. %d notes need sync. Last sync date is %s \n", notesCount, notesToSyncCount, lastSyncDate)
+	fmt.Print("v - view list | v# - view note | a - add notes | d# - delete note |")
+	if cli.auther != nil {
+		fmt.Print("s - sync | ")
+	}
+	fmt.Println("q - exit")
+}
+
+// deleteNote delete note from storage
+func (cli *CLI) deleteNote(inputIndex string) error {
+	index, err := strconv.Atoi(inputIndex)
+	if err != nil {
+		return errors.New("wrong index")
+	}
+	err = cli.storage.DeleteNote(index - 1)
+	if err != nil {
+		return errors.New("can't delete (" + err.Error() + ")")
+	}
+	err = cli.storage.Flush(cli.user.PasswordHash)
+	if err != nil {
+		fmt.Println("save storage file error (" + err.Error() + ")")
+	}
+	return nil
+}
+
+// viewNote output note's content
+func (cli *CLI) viewNote(inputIndex string) error {
+	viewIndex, _ := strconv.Atoi(inputIndex)
+	n, err := cli.storage.GetNote(viewIndex - 1)
 	if err != nil {
 		return err
 	}
-	err = cli.storage.Flush(cli.user.PasswordHash)
-	return err
+	body := n.Body
+	encoded, err := crypto.Decrypt(cli.user.PasswordHash, body)
+	if err != nil {
+		return errors.New("decrypt error (" + err.Error() + ") \n")
+	}
+	fmt.Println(string(encoded))
+	return nil
 }
 
 // loggedIn interface for logged in user
@@ -206,110 +253,43 @@ func (cli *CLI) loggedIn(cancel context.CancelFunc) (quit bool, err error) {
 	fmt.Println("Welcome, " + cli.user.Login)
 	showBar := true
 	for {
-		syncDate := cli.storage.GetLastSyncDate().Format(time.RFC3339)
-		if cli.storage.GetLastSyncDate().IsZero() {
+		syncDate := cli.syncer.GetLastSyncDate().Format(time.RFC3339)
+		if cli.syncer.GetLastSyncDate().IsZero() {
 			syncDate = "...never"
 		}
-		nonSync := cli.storage.GetNonSyncedData()
+		nonSync := cli.syncer.GetNonSyncNotes()
 		if showBar {
-			fmt.Printf("You have %d notes. %d notes need sync. Last sync date is %s \n", cli.storage.GetDataLen(), len(nonSync), syncDate)
-			if cli.storage.GetDataLen() > 0 {
-				fmt.Print("v - view list | v# - view note | ")
-			}
-			fmt.Print("a - add notes | ")
-			if cli.storage.GetDataLen() > 0 {
-				fmt.Print("d# - delete note | ")
-			}
-			if cli.client != nil {
-				fmt.Print("s - sync | ")
-			}
-			fmt.Println("q - exit")
+			cli.showMenuBar(cli.storage.GetNotesCount(), len(nonSync), syncDate)
 			showBar = false
 		}
 		fmt.Print("-> ")
 		command := readString()
 		// delete note
 		if matched := deleteCmdRegExp.FindAllStringSubmatch(command, -1); matched != nil {
-			index, err := strconv.Atoi(matched[0][1])
+			err := cli.deleteNote(matched[0][1])
 			if err != nil {
-				fmt.Println("wrong index")
-				continue
-			}
-			err = cli.storage.SetDeleted(index - 1)
-			if err != nil {
-				fmt.Println("can't delete (" + err.Error() + ")")
-				continue
-			}
-			fmt.Println("note deleted")
-			showBar = true
-			err = cli.storage.Flush(cli.user.PasswordHash)
-			if err != nil {
-				fmt.Println("save notes error (" + err.Error() + ")")
+				fmt.Println(err.Error())
+			} else {
+				showBar = true
+				fmt.Println("note deleted")
 			}
 			continue
 		}
 		// view note
 		if matched := viewCmdRegExp.FindAllStringSubmatch(command, -1); matched != nil {
-			index, _ := strconv.Atoi(matched[0][1])
-			n, err := cli.storage.GetByIndex(index - 1)
+			err := cli.viewNote(matched[0][1])
 			if err != nil {
-				fmt.Println(err.Error())
-				continue
+				fmt.Println(err)
 			}
-			encoded, err := crypto.Decrypt(cli.user.PasswordHash, n.Body)
-			if err != nil {
-				fmt.Println("decrypt error (" + err.Error() + ") \n")
-				continue
-			}
-			fmt.Println(string(encoded))
 			continue
 		}
 		switch command {
 		case "a":
-			err = cli.addNote()
-			if err != nil {
-				fmt.Println("add note error (" + err.Error() + ") \n")
-			} else {
-				fmt.Println("note added!")
-				err = cli.storage.Flush(cli.user.PasswordHash)
-				showBar = true
-				if err != nil {
-					fmt.Println("save notes error (" + err.Error() + ")")
-				}
-			}
+			cli.addNote()
 		case "v":
-			fmt.Println("------------- Notes: -------------")
-			loc := time.Local
-			for i, note := range cli.storage.GetNotes(true) {
-				fmt.Print(strconv.Itoa(i+1) + " | " + note.CreatedAt.In(loc).Format(time.RFC822) + " | " + note.Title)
-				if note.Deleted {
-					fmt.Print(" (deleted)")
-				}
-				if note.ID == "" {
-					fmt.Print(" (local)")
-				}
-				fmt.Println("")
-			}
-			fmt.Println("----------- End notes: -----------")
+			cli.printNotesTable()
 		case "s":
-			newData, newLastSync, err := cli.client.SyncData(nonSync, cli.storage.GetLastSyncDate())
-			if err != nil {
-				fmt.Println("sync error (" + err.Error() + ")")
-				continue
-			}
-			if cli.storage.GetLastSyncDate().After(newLastSync) {
-				fmt.Println("sync error (last sync date is incorrect")
-				continue
-			}
-			err = cli.storage.UpdateData(newData, newLastSync)
-			if err != nil {
-				fmt.Println("merge data error (" + err.Error() + ")")
-				continue
-			}
-			err = cli.storage.Flush(cli.user.PasswordHash)
-			if err != nil {
-				fmt.Println("save notes error (" + err.Error() + ")")
-			}
+			cli.sync()
 			showBar = true
 		case "q":
 			fmt.Println("Bye!")
@@ -321,6 +301,39 @@ func (cli *CLI) loggedIn(cancel context.CancelFunc) (quit bool, err error) {
 	}
 }
 
-func New(client GRPCClientModel, s StorageModel) *CLI {
-	return &CLI{state: START, client: client, storage: s}
+// sync data
+func (cli *CLI) sync() {
+	err := cli.syncer.Sync()
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		err := cli.storage.Flush(cli.user.PasswordHash)
+		if err != nil {
+			fmt.Println("save storage file error (" + err.Error() + ")")
+		} else {
+			fmt.Println("synchronization was successfull!")
+		}
+
+	}
+}
+
+// printNotesTable output notes info table
+func (cli *CLI) printNotesTable() {
+	fmt.Println("------------- Notes: -------------")
+	loc := time.Local
+	for i, note := range cli.storage.GetNotes(true) {
+		fmt.Print(strconv.Itoa(i+1) + " | " + note.CreatedAt.In(loc).Format(time.RFC822) + " | " + note.Title)
+		if note.Deleted {
+			fmt.Print(" (deleted)")
+		}
+		if note.ID == "" {
+			fmt.Print(" (local)")
+		}
+		fmt.Println("")
+	}
+	fmt.Println("----------------------")
+}
+
+func New(auther Authenticator, s NotesKeeper, syncer Syncer) *CLI {
+	return &CLI{state: startState, auther: auther, storage: s, syncer: syncer}
 }
