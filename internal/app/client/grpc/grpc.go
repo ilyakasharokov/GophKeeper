@@ -94,9 +94,9 @@ func (client *Client) SyncData(notes []models.Note, lastSync time.Time) ([]model
 	}
 	res, err := client.service.SyncData(ctx, req)
 	if res != nil && res.Status == "unauthorized" {
-		accessToken, refreshToken, err := client.RefreshToken(ctx, client.refreshToken)
-		if err != nil {
-			return nil, syncDate, err
+		accessToken, refreshToken, errr := client.RefreshToken(ctx, client.refreshToken)
+		if errr != nil {
+			return nil, syncDate, errr
 		}
 		client.token = accessToken
 		client.refreshToken = refreshToken
@@ -121,7 +121,7 @@ func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (string,
 	}
 	response, err := c.service.RefreshToken(ctx, &message)
 	if err != nil {
-		return "", "", nil
+		return "", "", err
 	}
 	if response.Status == "ok" {
 		return response.AccessToken, response.RefreshToken, nil

@@ -26,7 +26,6 @@ func New(u interfaces.UserServiceModel, ss interfaces.SyncServiceModel) *Server 
 }
 
 func (s *Server) Login(ctx context.Context, req *proto.LoginRequest) (rsp *proto.LoginResponse, err error) {
-	rsp = new(proto.LoginResponse)
 	user := models.User{
 		Login:    req.Login,
 		Password: req.Password,
@@ -68,13 +67,13 @@ func (s *Server) Register(ctx context.Context, req *proto.RegisterRequest) (rsp 
 	if err != nil {
 		return &proto.RegisterResponse{
 			Status: err.Error(),
-		}, nil
+		}, err
 	}
 	tokens, err := s.userService.AuthUser(ctx, user)
 	if err != nil {
 		return &proto.RegisterResponse{
 			Status: err.Error(),
-		}, nil
+		}, err
 	}
 	return &proto.RegisterResponse{
 		Status:       "created",
@@ -97,6 +96,9 @@ func (s *Server) SyncData(ctx context.Context, req *proto.SyncDataRequest) (rsp 
 	}
 	notes := service2.ProtoNotesToModels(req.GetNotes())
 	retNotes, retLastSyncDate, err := s.syncService.Sync(ctx, userID, notes, req.LastSync.AsTime())
+	if err != nil {
+		return rsp, err
+	}
 	rsp.Notes = service2.NotesToProto(retNotes)
 	rsp.LastSync = timestamppb.New(retLastSyncDate)
 	return rsp, nil
