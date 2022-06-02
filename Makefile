@@ -48,7 +48,7 @@ build-server:
 		./cmd/server/*.go
 
 cert:
-	cd cert; ./gen.sh; cd ..
+	./cert.sh; cd ..
 
 clean: ## Remove previous build
 	rm -f $(CLIENT_LINUX) $(CLIENT_WINDOWS) $(CLIENT_DARWIN)

@@ -5,12 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	proto "gophkeeper/pkg/grpc/proto"
 	"gophkeeper/pkg/models"
 	"gophkeeper/pkg/service"
 	"time"
 
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -27,8 +27,8 @@ type Client struct {
 }
 
 // New returns a new grpc client
-func New(grpcAddr string, tm time.Duration) (*Client, error) {
-	transportOption := grpc.WithTransportCredentials(insecure.NewCredentials())
+func New(grpcAddr string, tm time.Duration, crd credentials.TransportCredentials) (*Client, error) {
+	transportOption := grpc.WithTransportCredentials(crd)
 	cc, err := grpc.Dial(grpcAddr, transportOption)
 	if err != nil {
 		log.Err(err).Msg("cannot dial server")
@@ -40,6 +40,7 @@ func New(grpcAddr string, tm time.Duration) (*Client, error) {
 	req := &proto.CCRequest{}
 	_, err = srv.CheckConn(ctx, req)
 	if err != nil {
+		log.Err(err).Msg("cannot connect to server")
 		return nil, err
 	}
 	return &Client{cc, srv, "", "", tm}, nil

@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"github.com/jmoiron/sqlx"
+	"google.golang.org/grpc/credentials"
 	"gophkeeper/cmd/server/configuration"
 	"gophkeeper/internal/app/server/authorization"
 	"gophkeeper/internal/app/server/database"
@@ -28,13 +30,37 @@ var (
 	BuildCommit  = "N/A"
 )
 
+func loadTLSCredentials() (credentials.TransportCredentials, error) {
+	// Load server's certificate and private key
+	serverCert, err := tls.LoadX509KeyPair("cert/server-cert.pem", "cert/server-key.pem")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the credentials and return it
+	config := &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.NoClientCert,
+	}
+
+	return credentials.NewTLS(config), nil
+}
+
 func main() {
 	fmt.Printf("Build version: %v\n", BuildVersion)
 	fmt.Printf("Build date: %v\n", BuildDate)
 	fmt.Printf("Build commit: %v\n", BuildCommit)
 	ctx, cancel := context.WithCancel(context.Background())
 	cfg := configuration.New()
+
+	tlsCredentials, err := loadTLSCredentials()
+	if err != nil {
+		fmt.Println("cannot load TLS credentials: ", err)
+		return
+	}
+
 	s := grpc.NewServer(
+		grpc.Creds(tlsCredentials),
 		grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				grpc_auth.UnaryServerInterceptor(func(ctx context.Context) (context.Context, error) {
@@ -59,6 +85,7 @@ func main() {
 	d := database.NewDB(db)
 	us := service.NewUserService(d, cfg.ACCESS_TOKEN_LIFETIME, cfg.REFRESH_TOKEN_LIFETIME, cfg.ACCESS_TOKEN_SECRET, cfg.REFRESH_TOKEN_SECRET)
 	ss := service.NewSyncService(d)
+
 	proto.RegisterGophKeeperServer(s, grpcserver.New(us, ss))
 
 	go func() {
