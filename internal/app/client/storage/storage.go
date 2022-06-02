@@ -58,7 +58,7 @@ func (s *Storage) GetNotes(all bool) []models.Note {
 	return ret
 }
 
-// Flush save storage to file
+// Flush serialize storage to binary data and save to file
 func (storage *Storage) Flush(hash []byte) error {
 	var buff bytes.Buffer
 	gobEncoder := gob.NewEncoder(&buff)
