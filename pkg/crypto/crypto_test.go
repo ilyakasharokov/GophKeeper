@@ -12,6 +12,7 @@ func TestDecrypt(t *testing.T) {
 	}
 	hash := Hash("ilya")
 	text := []byte("mytext")
+	emptyText := []byte("")
 	enc, _ := Encrypt(hash, text)
 	tests := []struct {
 		name    string
@@ -21,7 +22,12 @@ func TestDecrypt(t *testing.T) {
 	}{
 		{
 			name: "ok", args: args{key: hash, text: enc}, want: text,
-			wantErr: false},
+			wantErr: false,
+		},
+		{
+			name: "err", args: args{key: hash, text: emptyText}, want: nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -44,6 +50,7 @@ func TestEncrypt(t *testing.T) {
 	}
 	hash := Hash("ilya")
 	text := []byte("mytext")
+	emptyText := []byte("")
 	tests := []struct {
 		name    string
 		args    args
@@ -51,6 +58,7 @@ func TestEncrypt(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "ok", args: args{key: hash, text: text}, wantErr: false},
+		{name: "err", args: args{key: emptyText, text: emptyText}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -73,6 +81,7 @@ func TestHash(t *testing.T) {
 		want []byte
 	}{
 		{name: "ok", args: args{s: "ilya"}, want: []byte{122, 100, 130, 151, 202, 198, 98, 8, 136, 159, 110, 213, 164, 250, 142, 67, 81, 100, 20, 186, 131, 229, 196, 217, 141, 5, 232, 89, 158, 237, 230, 181}},
+		{name: "empty", args: args{s: ""}, want: nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

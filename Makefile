@@ -1,4 +1,4 @@
-.PHONY: build
+.PHONY: build cert
 build: build-client build-server
 
 BIN_DIR=./bin/
@@ -46,6 +46,9 @@ build-server:
 		 -X 'main.BuildUser=$(USER)'\
 		  -X 'main.BuildDate=$(BUILD_DATE)'" \
 		./cmd/server/*.go
+
+cert:
+	cd cert; ./gen.sh; cd ..
 
 clean: ## Remove previous build
 	rm -f $(CLIENT_LINUX) $(CLIENT_WINDOWS) $(CLIENT_DARWIN)

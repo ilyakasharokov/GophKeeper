@@ -11,11 +11,13 @@ import (
 	"io"
 )
 
+// Hash hash string with sha256
 func Hash(s string) []byte {
 	h := sha256.Sum256([]byte(s))
 	return h[:]
 }
 
+// Encrypt text with key using aes
 func Encrypt(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -32,6 +34,7 @@ func Encrypt(key, text []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
+// Encrypt text with key using aes
 func Decrypt(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
